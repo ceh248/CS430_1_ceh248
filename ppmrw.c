@@ -7,7 +7,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-// tpye def decoration
+// function decoration
+int writeP3(char *inputFile, char *outputFile);
+int writeP6(char *inputFile, char *outputFile);
+
+// structs
 typedef struct ppmRGBpixel
 {
     unsigned char r,g,b;
@@ -19,11 +23,23 @@ typedef struct ppmImage
     unsigned char *data;
 } ppmImage;
 
+//
 ppmImage *buffer;
-// function decoration
+//writer the file in P3
+int writeP3(char *inputFile, char *outputFile)
+{
+    printf("Wrote to %c in P3 format\n", *outputFile);
+    return 0;
+}
 
-// ppm writer p3
-ppmImage ppmRead(int ppmFormat, char *inputFile,char *output)
+// write the file in P6
+int writeP6(char *inputFile, char *outputFile)
+{
+    printf("Wrote to %c in P6 format\n", *outputFile);
+    return 0;
+}
+
+ppmImage readFile(int ppmFormat, char *inputFile,char *outputFile)
 {
     // convent file in to a ppm3 format
     buffer = (ppmImage*)malloc(sizeof(ppmImage));
@@ -47,23 +63,11 @@ ppmImage ppmRead(int ppmFormat, char *inputFile,char *output)
         fprintf(stderr, "Error: Incorrect ppm file number\n");
         exit(1);
     }
-
-    printf("Wrote to %s in P3 format\n", output);
+    if (ppmVal == 3)
+    {
+        writeP3(inputFile, outputFile);
+    }
     exit(0);
-}
-
-// pp writer p3
-int ppmWriterp3(char *input, char *output)
-{
-    printf("Wrote to %s in p3 format\n", *output);
-    return 0;
-}
-// ppm writer p6
-int ppmWritep6(char *input,char *output)
-{
-    // convet file in to a ppm6 format
-    printf("Wrote to %s in P6 format\n", output);
-    return 0;
 }
 
 /*
@@ -80,17 +84,12 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Error: Incorrect amount of arguments\n");
         return 1;
     }
-    if (ppmFormat == 3)
-    {
-        ppmRead(ppmFormat,inputFile,outputFile);
-    }
-    else if (ppmFormat == 6)
-    {
-        ppmWritep6(inputFile,outputFile);
-    }
-    else
+    //
+    if (ppmFormat != 3 && ppmFormat != 6)
     {
         fprintf(stderr, "Error: Incorrect conversion number type \n");
+        return 1;
     }
+    readFile(ppmFormat,inputFile,outputFile);
     return 0;
 }
