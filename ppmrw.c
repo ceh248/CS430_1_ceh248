@@ -10,8 +10,9 @@
 // function decoration
 int writeP3(char *inputFile, char *outputFile);
 int writeP6(char *inputFile, char *outputFile);
+int readFile(int ppmFormat, char *inputFile,char *outputFile);
 
-// structs
+// structs decoration
 typedef struct ppmRGBpixel
 {
     unsigned char r,g,b;
@@ -23,11 +24,13 @@ typedef struct ppmImage
     unsigned char *data;
 } ppmImage;
 
-//
-ppmImage *buffer;
+// ppmImage *buffer;
 //writer the file in P3
 int writeP3(char *inputFile, char *outputFile)
 {
+    //FILE* write = open(outputFile,"w");
+    //fwrite();
+    //fclose();
     printf("Wrote to %c in P3 format\n", *outputFile);
     return 0;
 }
@@ -39,35 +42,63 @@ int writeP6(char *inputFile, char *outputFile)
     return 0;
 }
 
-ppmImage readFile(int ppmFormat, char *inputFile,char *outputFile)
+int readFile(int ppmFormat, char *inputFile,char *outputFile)
 {
     // convent file in to a ppm3 format
-    buffer = (ppmImage*)malloc(sizeof(ppmImage));
-    FILE *data = fopen(inputFile, "rb");
-    int ppmVal = fgetc(data);
-    printf("%d\n", ppmVal);
-    if (data == NULL)
+    char *buffer;
+    long numOfBytes;
+    // open the file
+    FILE *read = fopen(inputFile, "rb");
+    // check if the file is real
+    if (read == NULL)
     {
-        fprintf(stderr, "%s doen't not contant any data to be read\n", inputFile);
-        exit(1);
+        fprintf(stderr, "Error: %s doen't not contant any data to be read\n", inputFile);
+        return 1;
     }
+    // get the number of bytes
+    fseek(read, 0L, SEEK_END);
+    numOfBytes = ftell(read);
+
+    //reset the pointer to the beginning of the file
+    fseek(read, 0L, SEEK_SET);
+
+    //grab sufficient memory for the buffer to hold the file
+    buffer = (char*)calloc(numOfBytes, sizeof(char));
+
+    // memory Error
+    if (buffer == NULL)
+    {
+        return 1;
+    }
+
+    // copy all the text into the buffer
+    fread(buffer, sizeof(char), numOfBytes, read);
+    fclose(read);
+    printf("%s was read and contants:\n %s", inputFile, buffer);
+    free(buffer);
+
+    /*
+    int ppmVal = fgetc(read);
+    printf("%d\n", ppmVal);
+
     if (ppmVal != 'P')
     {
         fprintf(stderr, "Error: Missing the magic number\n");
-        exit(1);
+        return 1;
     }
-    ppmVal = fgetc(data);
+    ppmVal = fgetc(read);
     printf("%c\n", ppmVal);
     if (ppmVal != '3' && ppmVal != '6')
     {
         fprintf(stderr, "Error: Incorrect ppm file number\n");
-        exit(1);
+        return 1;
     }
     if (ppmVal == 3)
     {
         writeP3(inputFile, outputFile);
     }
-    exit(0);
+    */
+    return 0;
 }
 
 /*
