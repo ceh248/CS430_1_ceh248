@@ -8,8 +8,8 @@
 #include <stdio.h>
 
 // function decoration
-int writeP3(char *inputFile, char *outputFile);
-int writeP6(char *inputFile, char *outputFile);
+int writeP3(char *inputFile, char *outputFile, char *buffer, long numOfBytes);
+int writeP6(char *inputFile, char *outputFile, char *buffer, long numOfBytes);
 int readFile(int ppmFormat, char *inputFile,char *outputFile);
 
 // structs decoration
@@ -26,18 +26,21 @@ typedef struct ppmImage
 
 // ppmImage *buffer;
 //writer the file in P3
-int writeP3(char *inputFile, char *outputFile)
+int writeP3(char *inputFile, char *outputFile,char *buffer, long numOfBytes)
 {
-    //FILE* write = open(outputFile,"w");
-    //fwrite();
-    //fclose();
+    FILE* write = fopen(outputFile,"w");
+    fwrite(buffer, sizeof(buffer),numOfBytes,write);
+    fclose(write);
     printf("Wrote to %c in P3 format\n", *outputFile);
     return 0;
 }
 
 // write the file in P6
-int writeP6(char *inputFile, char *outputFile)
+int writeP6(char *inputFile, char *outputFile, char * buffer, long numOfBytes)
 {
+    FILE* write = fopen(outputFile,"w");
+    fwrite(buffer, sizeof(buffer),numOfBytes,write);
+    fclose(write);
     printf("Wrote to %c in P6 format\n", *outputFile);
     return 0;
 }
@@ -74,11 +77,14 @@ int readFile(int ppmFormat, char *inputFile,char *outputFile)
     // copy all the text into the buffer
     fread(buffer, sizeof(char), numOfBytes, read);
     fclose(read);
-    printf("%s was read and contants:\n %s", inputFile, buffer);
-    free(buffer);
+    printf("%s was read and contants:\n%s", inputFile, buffer);
+    //free(buffer);
 
     /*
-    int ppmVal = fgetc(read);
+     * want to write to the file in the correct way
+     */
+    FILE *readAgain = fopen(inputFile, "rb");
+    int ppmVal = fgetc(readAgain);
     printf("%d\n", ppmVal);
 
     if (ppmVal != 'P')
@@ -86,18 +92,22 @@ int readFile(int ppmFormat, char *inputFile,char *outputFile)
         fprintf(stderr, "Error: Missing the magic number\n");
         return 1;
     }
-    ppmVal = fgetc(read);
+    ppmVal = fgetc(readAgain);
     printf("%c\n", ppmVal);
     if (ppmVal != '3' && ppmVal != '6')
     {
         fprintf(stderr, "Error: Incorrect ppm file number\n");
         return 1;
     }
-    if (ppmVal == 3)
+    if (ppmVal == '3' && ppmFormat == 3)
     {
-        writeP3(inputFile, outputFile);
+        writeP3(inputFile, outputFile, buffer, numOfBytes);
     }
-    */
+    if (ppmVal == '6' && ppmFormat == 6)
+    {
+        writeP6(inputFile, outputFile, buffer, numOfBytes);
+    }
+    fclose(readAgain);
     return 0;
 }
 
