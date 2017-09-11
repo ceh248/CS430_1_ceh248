@@ -11,6 +11,8 @@
 int writeP3(char *inputFile, char *outputFile, char *buffer, long numOfBytes);
 int writeP6(char *inputFile, char *outputFile, char *buffer, long numOfBytes);
 int readFile(int ppmFormat, char *inputFile,char *outputFile);
+int writeP3FromP6(char *inputFile, char *outputFile,char *buffer, long numOfBytes);
+int writeP6FromP3(char *inputFile, char *outputFile,char *buffer, long numOfBytes);
 
 // structs decoration
 typedef struct ppmRGBpixel
@@ -42,6 +44,21 @@ int writeP6(char *inputFile, char *outputFile, char * buffer, long numOfBytes)
     fwrite(buffer, sizeof(buffer),numOfBytes,write);
     fclose(write);
     printf("Wrote to %c in P6 format\n", *outputFile);
+    return 0;
+}
+
+//write to a file in P3 format from a P6 format
+int writeP3FromP6(char *inputFile, char *outputFile,char *buffer, long numOfBytes)
+{
+    //
+    printf("Write to %c in P3 from P6\n", *outputFile);
+    return 0;
+}
+//write to a file in P6 format from a P3 format
+int writeP6FromP3(char *inputFile, char *outputFile,char *buffer, long numOfBytes)
+{
+    //
+    printf("Write to %c in P6 from P3\n", *outputFile);
     return 0;
 }
 
@@ -120,15 +137,25 @@ int main(int argc, char *argv[])
     char *inputFile = argv[2];
     char *outputFile = argv[3];
 
+    // Variable to used to see if the file exist
+    FILE *fileExist;
+
     if (argc != 4)
     {
         fprintf(stderr, "Error: Incorrect amount of arguments\n");
         return 1;
     }
-    //
+    // check to see if correct format number
     if (ppmFormat != 3 && ppmFormat != 6)
     {
         fprintf(stderr, "Error: Incorrect conversion number type \n");
+        return 1;
+    }
+    // check to see if input file exites
+    if (!(fileExist = fopen(inputFile,"r")))
+    {
+        // file not found
+        fprintf(stderr, "Error: Input file %s was not found\n", inputFile);
         return 1;
     }
     readFile(ppmFormat,inputFile,outputFile);
