@@ -7,13 +7,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-// function decoration
-int writeP3(char *inputFile, char *outputFile, char *buffer, long numOfBytes);
-int writeP6(char *inputFile, char *outputFile, char *buffer, long numOfBytes);
-int readFile(int ppmFormat, char *inputFile,char *outputFile);
-int writeP3FromP6(char *inputFile, char *outputFile,char *buffer, long numOfBytes);
-int writeP6FromP3(char *inputFile, char *outputFile,char *buffer, long numOfBytes);
-
 // structs decoration
 typedef struct ppmRGBpixel
 {
@@ -22,28 +15,37 @@ typedef struct ppmRGBpixel
 
 typedef struct ppmImage
 {
-    int width, heigth, maxColorInten;
+    int magicNumber, width, heigth, maxColorInten;
     unsigned char *data;
 } ppmImage;
 
+// function decoration
+int writeP3toP3(char *inputFile, char *outputFile, char *buffer, long numOfBytes);
+int writeP6toP6(char *inputFile, char *outputFile, char *buffer, long numOfBytes);
+int writeP3FromP6(char *inputFile, char *outputFile,char *buffer, long numOfBytes);
+int writeP6FromP3(char *inputFile, char *outputFile,char *buffer, long numOfBytes);
+int readFile(int ppmFormat, char *inputFile,char *outputFile, ppmImage inputImage);
+
 // ppmImage *buffer;
 //writer the file in P3
-int writeP3(char *inputFile, char *outputFile,char *buffer, long numOfBytes)
+int writeP3toP3(char *inputFile, char *outputFile,char *buffer, long numOfBytes)
 {
     FILE* write = fopen(outputFile,"w");
     fwrite(buffer, sizeof(buffer),numOfBytes,write);
     fclose(write);
     printf("Wrote to %c in P3 format\n", *outputFile);
+    free(buffer);
     return 0;
 }
 
 // write the file in P6
-int writeP6(char *inputFile, char *outputFile, char * buffer, long numOfBytes)
+int writeP6toP6(char *inputFile, char *outputFile, char * buffer, long numOfBytes)
 {
     FILE* write = fopen(outputFile,"w");
     fwrite(buffer, sizeof(buffer),numOfBytes,write);
     fclose(write);
     printf("Wrote to %c in P6 format\n", *outputFile);
+    free(buffer);
     return 0;
 }
 
@@ -62,8 +64,12 @@ int writeP6FromP3(char *inputFile, char *outputFile,char *buffer, long numOfByte
     return 0;
 }
 
-int readFile(int ppmFormat, char *inputFile,char *outputFile)
+// read in the input file to be stored to memory and then determine
+// what writing porcess to do
+int readFile(int ppmFormat, char *inputFile, char *outputFile, ppmImage inputImage)
 {
+    // temp Variable for the image
+    int tempMagicNumber, tempWidth,tempHeight,tempMaxColorValue, red, green, blue, alpha;
     // convent file in to a ppm3 format
     char *buffer;
     long numOfBytes;
@@ -95,34 +101,39 @@ int readFile(int ppmFormat, char *inputFile,char *outputFile)
     fread(buffer, sizeof(char), numOfBytes, read);
     fclose(read);
     printf("%s was read and contants:\n%s", inputFile, buffer);
-    //free(buffer);
 
     /*
      * want to write to the file in the correct way
      */
     FILE *readAgain = fopen(inputFile, "rb");
     int ppmVal = fgetc(readAgain);
-    printf("%d\n", ppmVal);
-
     if (ppmVal != 'P')
     {
         fprintf(stderr, "Error: Missing the magic number\n");
         return 1;
     }
+    //tempMagicNumber = fscanf(readAgain, "%d", &inputImage.magicNumber);
+    //printf("%d\n", inputImage.magicNumber);
     ppmVal = fgetc(readAgain);
-    printf("%c\n", ppmVal);
+
     if (ppmVal != '3' && ppmVal != '6')
     {
         fprintf(stderr, "Error: Incorrect ppm file number\n");
         return 1;
     }
+    tempWidth = fscanf(readAgain, "%d %d", &inputImage.width, &inputImage.heigth);
+    printf("%d\n%d\n", inputImage.width, inputImage.heigth);
+
+    /*
+     * to determine where to write the file too
+     */
     if (ppmVal == '3' && ppmFormat == 3)
     {
-        writeP3(inputFile, outputFile, buffer, numOfBytes);
+        writeP3toP3(inputFile, outputFile, buffer, numOfBytes);
     }
     if (ppmVal == '6' && ppmFormat == 6)
     {
-        writeP6(inputFile, outputFile, buffer, numOfBytes);
+        writeP6toP6(inputFile, outputFile, buffer, numOfBytes);
     }
     fclose(readAgain);
     return 0;
@@ -158,6 +169,10 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Error: Input file %s was not found\n", inputFile);
         return 1;
     }
-    readFile(ppmFormat,inputFile,outputFile);
+    // read the file into the ppm Image struct
+    ppmImage *inputImage = malloc(sizeof(ppmImage));
+    // go to the read file
+    readFile(ppmFormat,inputFile,outputFile, *inputImage);
+    fclose(fileExist);
     return 0;
 }
