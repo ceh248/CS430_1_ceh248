@@ -15,7 +15,8 @@ typedef struct ppmRGBpixel
 
 typedef struct ppmImage
 {
-    int magicNumber, width, heigth, maxColorInten;
+    unsigned char magicNumber;
+    int width, heigth, maxColorInten;
     unsigned char *data;
 } ppmImage;
 
@@ -69,7 +70,7 @@ int writeP6FromP3(char *inputFile, char *outputFile,char *buffer, long numOfByte
 int readFile(int ppmFormat, char *inputFile, char *outputFile, ppmImage inputImage)
 {
     // temp Variable for the image
-    int tempMagicNumber, tempWidth,tempHeight,tempMaxColorValue, red, green, blue, alpha;
+    int tempMagicNumber, tempWidth,tempHeight,tempMaxColorValue;
     // convent file in to a ppm3 format
     char *buffer;
     long numOfBytes;
@@ -100,7 +101,7 @@ int readFile(int ppmFormat, char *inputFile, char *outputFile, ppmImage inputIma
     // copy all the text into the buffer
     fread(buffer, sizeof(char), numOfBytes, read);
     fclose(read);
-    printf("%s was read and contants:\n%s", inputFile, buffer);
+    printf("%s was read and contants:\n\n%s", inputFile, buffer);
 
     /*
      * want to write to the file in the correct way
@@ -112,8 +113,6 @@ int readFile(int ppmFormat, char *inputFile, char *outputFile, ppmImage inputIma
         fprintf(stderr, "Error: Missing the magic number\n");
         return 1;
     }
-    //tempMagicNumber = fscanf(readAgain, "%d", &inputImage.magicNumber);
-    //printf("%d\n", inputImage.magicNumber);
     ppmVal = fgetc(readAgain);
 
     if (ppmVal != '3' && ppmVal != '6')
@@ -121,19 +120,39 @@ int readFile(int ppmFormat, char *inputFile, char *outputFile, ppmImage inputIma
         fprintf(stderr, "Error: Incorrect ppm file number\n");
         return 1;
     }
-    tempWidth = fscanf(readAgain, "%d %d", &inputImage.width, &inputImage.heigth);
-    printf("%d\n%d\n", inputImage.width, inputImage.heigth);
+    tempMagicNumber = ppmVal;
+    printf("%d\n", tempMagicNumber);
+    while(ppmVal != '\n')
+    {
+        // ship over any commit in the file
+        ppmVal = fgetc(readAgain);
+        //printf("%d\n", ppmVal);
+    }
+    // todo: check for a commit after the header of file type
+    fscanf(readAgain, "%d %d",&tempWidth, &tempHeight);
+    printf("\n%d\n%d\n", tempWidth, tempHeight);
+    printf("%d\n", ppmVal);
+    fscanf(readAgain, "%d", &tempMaxColorValue);
+    printf("%d\n", tempMaxColorValue);
 
     /*
      * to determine where to write the file too
      */
-    if (ppmVal == '3' && ppmFormat == 3)
+    if (tempMagicNumber == '3' && ppmFormat == 3)
     {
         writeP3toP3(inputFile, outputFile, buffer, numOfBytes);
     }
-    if (ppmVal == '6' && ppmFormat == 6)
+    if (tempMagicNumber == '6' && ppmFormat == 6)
     {
         writeP6toP6(inputFile, outputFile, buffer, numOfBytes);
+    }
+    if (tempMagicNumber == '3' && ppmFormat == 6)
+    {
+        writeP6FromP3(inputFile, outputFile, buffer, numOfBytes);
+    }
+    if (tempMagicNumber == '6' && ppmFormat == 3)
+    {
+        writeP3FromP6(inputFile, outputFile, buffer, numOfBytes);
     }
     fclose(readAgain);
     return 0;
