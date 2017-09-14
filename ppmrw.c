@@ -18,111 +18,44 @@ typedef struct ppmImage
 {
     unsigned char magicNumber;
     int width, heigth, maxColorInten;
-    unsigned char *data;
+    ppmRGBpixel *data;
 } ppmImage;
 
 // function decoration
-int writeP3toP3(char *inputFile, char *outputFile);
-int writeP6toP6(char *inputFile, char *outputFile);
-int writeP3FromP6(char *inputFile, char *outputFile);
-int writeP6FromP3(char *inputFile, char *outputFile);
+int writeP3(char *inputFile, char *outputFile, ppmImage inputImage);
+int writeP6(char *inputFile, char *outputFile, ppmImage inputImage);
 int readFile(int ppmFormat, char *inputFile,char *outputFile, ppmImage inputImage);
 
-// ppmImage *buffer;
-//writer the file in P3
-int writeP3toP3(char *inputFile, char *outputFile)
-{
-    char *buffer;
-    long numOfBytes;
-    // open the file
-    FILE *read = fopen(inputFile, "rb");
-    // check if the file is real
-    if (read == NULL)
-    {
-        fprintf(stderr, "Error: %s doen't not contant any data to be read\n", inputFile);
-        return 1;
-    }
-    // get the number of bytes
-    fseek(read, 0L, SEEK_END);
-    numOfBytes = ftell(read);
-
-    //reset the pointer to the beginning of the file
-    fseek(read, 0L, SEEK_SET);
-
-    //grab sufficient memory for the buffer to hold the file
-    buffer = (char*)calloc(numOfBytes, sizeof(char));
-
-    // memory Error
-    if (buffer == NULL)
-    {
-        return 1;
-    }
-
-    // copy all the text into the buffer
-    fread(buffer, sizeof(char), numOfBytes, read);
-    fclose(read);
-    printf("%s was read and contants:\n\n%s", inputFile, buffer);
-    FILE* write = fopen(outputFile,"w");
-    fwrite(buffer, sizeof(buffer),numOfBytes,write);
-    fclose(write);
-    printf("Wrote to %c in P3 format\n", *outputFile);
-    free(buffer);
-    return 0;
-}
-
-// write the file in P6
-int writeP6toP6(char *inputFile, char *outputFile)
-{
-    char *buffer;
-    long numOfBytes;
-    // open the file
-    FILE *read = fopen(inputFile, "rb");
-    // check if the file is real
-    if (read == NULL)
-    {
-        fprintf(stderr, "Error: %s doen't not contant any data to be read\n", inputFile);
-        return 1;
-    }
-    // get the number of bytes
-    fseek(read, 0L, SEEK_END);
-    numOfBytes = ftell(read);
-
-    //reset the pointer to the beginning of the file
-    fseek(read, 0L, SEEK_SET);
-
-    //grab sufficient memory for the buffer to hold the file
-    buffer = (char*)calloc(numOfBytes, sizeof(char));
-
-    // memory Error
-    if (buffer == NULL)
-    {
-        return 1;
-    }
-
-    // copy all the text into the buffer
-    fread(buffer, sizeof(char), numOfBytes, read);
-    fclose(read);
-    printf("%s was read and contants:\n\n%s", inputFile, buffer);
-    FILE* write = fopen(outputFile,"w");
-    fwrite(buffer, sizeof(buffer),numOfBytes,write);
-    fclose(write);
-    printf("Wrote to %c in P6 format\n", *outputFile);
-    free(buffer);
-    return 0;
-}
-
 //write to a file in P3 format from a P6 format
-int writeP3FromP6(char *inputFile, char *outputFile)
+int writeP3(char *inputFile, char *outputFile, ppmImage inputImage)
 {
     //
-    printf("Write to %c in P3 from P6\n", *outputFile);
+    char buffer[256], *fileHeader;
+    FILE* write = fopen(outputFile,"w");
+    inputImage.data = (ppmRGBpixel *)malloc(sizeof(ppmRGBpixel) * inputImage.width * inputImage.heigth);
+    fprintf(write, "P3\n%d %d\n%d\n",inputImage.width, inputImage.heigth, inputImage.maxColorInten);
+    fclose(write);
+    printf("Write to %s in P3 from P6\n", outputFile);
     return 0;
 }
 //write to a file in P6 format from a P3 format
-int writeP6FromP3(char *inputFile, char *outputFile)
+int writeP6(char *inputFile, char *outputFile, ppmImage inputImage)
 {
     //
-    printf("Write to %c in P6 from P3\n", *outputFile);
+    char buffer[256], *fileHeader;
+    FILE* write = fopen(outputFile,"w");
+    inputImage.data = (ppmRGBpixel *)malloc(sizeof(ppmRGBpixel) * inputImage.width * inputImage.heigth);
+    fprintf(write, "P6\n%d %d\n%d\n",inputImage.width, inputImage.heigth, inputImage.maxColorInten);
+    //read the ascii file, convert the characters to int, and store it in our buffer
+    for (int wtxt=0; wtxt <inputImage.width * inputImage.heigth; wtxt++)
+    {
+        //
+        int curVal;
+
+    }
+
+    fclose(write);
+    printf("Write to %s in P6 from P3\n", outputFile);
     return 0;
 }
 
@@ -132,7 +65,6 @@ int readFile(int ppmFormat, char *inputFile, char *outputFile, ppmImage inputIma
 {
     // temp Variable for the image
     int tempMagicNumber, tempWidth,tempHeight,tempMaxColorValue;
-    // convent file in to a ppm3 format
 
     /*
      * want to write to the file in the correct way
@@ -152,6 +84,7 @@ int readFile(int ppmFormat, char *inputFile, char *outputFile, ppmImage inputIma
         return 1;
     }
     tempMagicNumber = ppmVal;
+    inputImage.magicNumber = tempMagicNumber;
     printf("%d\n", tempMagicNumber);
     while(ppmVal != '\n')
     {
@@ -159,39 +92,41 @@ int readFile(int ppmFormat, char *inputFile, char *outputFile, ppmImage inputIma
         ppmVal = fgetc(readAgain);
         //printf("%d\n", ppmVal);
     }
-    // todo: check for a commit after the header of file type
     fscanf(readAgain, "%d %d",&tempWidth, &tempHeight);
-    printf("%d\n%d\n", tempWidth, tempHeight);
-    // todo: check the width and height to see if they are valid value
+    if (tempWidth < 0)
+    {
+        fprintf(stderr, "Error: Incorrect file width size, must be greater then Zero\n");
+    }
+    if (tempHeight < 0)
+    {
+        fprintf(stderr, "Error: Incorrect file height size, must be greater then Zero\n");
+    }
+    inputImage.width = tempWidth;
+    inputImage.heigth = tempHeight;
+    printf("\n%d\n\n", inputImage.width);
     ppmVal = fgetc(readAgain);
     while(ppmVal != '\n')
     {
         ppmVal = fgetc(readAgain);
     }
     fscanf(readAgain, "%d", &tempMaxColorValue);
-    printf("%d\n", tempMaxColorValue);
-    //todo: check the tempMaxColorValue to see if if valid value
-
+    if (tempMaxColorValue < 1 || tempMaxColorValue > 255)
+    {
+        fprintf(stderr, "Error: Incorrect file color intensity, must be 1 to 255\n");
+    }
+    inputImage.maxColorInten = tempMagicNumber;
+    fclose(readAgain);
     /*
      * to determine where to write the file too
      */
-    if (tempMagicNumber == '3' && ppmFormat == 3)
+    if (ppmFormat == 3)
     {
-        writeP3toP3(inputFile, outputFile);
+        writeP3(inputFile, outputFile, inputImage);
     }
-    if (tempMagicNumber == '6' && ppmFormat == 6)
+    if (ppmFormat == 6)
     {
-        writeP6toP6(inputFile, outputFile);
+        writeP6(inputFile, outputFile, inputImage);
     }
-    if (tempMagicNumber == '3' && ppmFormat == 6)
-    {
-        writeP6FromP3(inputFile, outputFile);
-    }
-    if (tempMagicNumber == '6' && ppmFormat == 3)
-    {
-        writeP3FromP6(inputFile, outputFile);
-    }
-    fclose(readAgain);
     return 0;
 }
 
