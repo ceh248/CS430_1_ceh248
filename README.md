@@ -19,6 +19,10 @@ Once the project is build type ./ppmrw 6 input.ppm output.ppm or ./ppmrw 3 input
 
 The project will run and convert the input and write out to the output file.
 
+#Known	Issues
+P6 to P3 writes out to the file in all black
+P3 to P6 not full sure if the conversion is writing out all the correct format.
+
 #Authors
 Colter Hooker
 ceh248@nau.edu

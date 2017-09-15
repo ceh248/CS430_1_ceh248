@@ -142,9 +142,6 @@ int readFile(int ppmFormat, char *inputFile, char *outputFile, ppmImage inputIma
         fscanf(read,"%u",&curVal);
         inputImage.data[wtxt].b = curVal;
     }
-    printf("%d\n", inputImage.data[0].r);
-    printf("%d\n", inputImage.data[0].g);
-    printf("%d\n", inputImage.data[0].b);
     fclose(read);
     /*
      * to determine where to write the file too
