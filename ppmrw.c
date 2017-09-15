@@ -31,10 +31,25 @@ int readFile(int ppmFormat, char *inputFile,char *outputFile, ppmImage inputImag
 //write to a file in P3 format from a P6 format
 int writeP3(char *inputFile, char *outputFile, ppmImage inputImage)
 {
+    int counter = 1;
     FILE* write = fopen(outputFile,"w");
     inputImage.data = (ppmRGBpixel *)malloc(sizeof(ppmRGBpixel) * inputImage.width * inputImage.heigth);
     fprintf(write, "P3\n%d %d\n%d\n",inputImage.width, inputImage.heigth, inputImage.maxColorInten);
-
+    //write out to the ascii file
+    for (int wtxt = 0; wtxt < inputImage.width * inputImage.heigth; wtxt++)
+    {
+        fprintf(write, "%d  %d  %d ", inputImage.data[wtxt].r , inputImage.data[wtxt].g, inputImage.data[wtxt].b);
+        fprintf(write, "    ");
+        if (counter == inputImage.width)
+        {
+            fprintf(write, "\n");
+            counter = 1;
+        }
+        else
+        {
+            counter += 1;
+        }
+    }
     fclose(write);
     printf("Wrote to %s in P3 from P%c\n", outputFile, inputImage.magicNumber);
     return 0;
@@ -56,7 +71,6 @@ int readFile(int ppmFormat, char *inputFile, char *outputFile, ppmImage inputIma
 {
     // temp Variable for the image
     int tempMagicNumber, tempWidth,tempHeight,tempMaxColorValue, checkwh;
-
     /*
      * want to write to the file in the correct way
      */
@@ -76,7 +90,6 @@ int readFile(int ppmFormat, char *inputFile, char *outputFile, ppmImage inputIma
     }
     tempMagicNumber = ppmVal;
     inputImage.magicNumber = tempMagicNumber;
-
     while(ppmVal != '\n')
     {
         ppmVal = fgetc(read);
@@ -122,13 +135,16 @@ int readFile(int ppmFormat, char *inputFile, char *outputFile, ppmImage inputIma
     {
         //
         int curVal;
-        fscanf(read,"%d",&curVal);
+        fscanf(read,"%u",&curVal);
         inputImage.data[wtxt].r = curVal;
-        fscanf(read,"%d",&curVal);
+        fscanf(read,"%u",&curVal);
         inputImage.data[wtxt].g = curVal;
-        fscanf(read,"%d",&curVal);
+        fscanf(read,"%u",&curVal);
         inputImage.data[wtxt].b = curVal;
     }
+    printf("%d\n", inputImage.data[0].r);
+    printf("%d\n", inputImage.data[0].g);
+    printf("%d\n", inputImage.data[0].b);
     fclose(read);
     /*
      * to determine where to write the file too
