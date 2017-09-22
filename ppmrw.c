@@ -33,7 +33,7 @@ int writeP3(char *inputFile, char *outputFile, ppmImage inputImage)
 {
     int counter = 1;
     FILE* write = fopen(outputFile,"w");
-    inputImage.data = (ppmRGBpixel *)malloc(sizeof(ppmRGBpixel) * inputImage.width * inputImage.heigth);
+    //inputImage.data = (ppmRGBpixel *)malloc(sizeof(ppmRGBpixel) * inputImage.width * inputImage.heigth);
     fprintf(write, "P3\n%d %d\n%d\n",inputImage.width, inputImage.heigth, inputImage.maxColorInten);
     //write out to the ascii file
     for (int wtxt = 0; wtxt < inputImage.width * inputImage.heigth; wtxt++)
